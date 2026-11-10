@@ -1,0 +1,5 @@
+.DS_Store
+__pycache__/
+*.pyc
+# 참가자 응답 파일은 레포에 올리지 않음
+*.jsonl

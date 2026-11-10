@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>감정 단어 설문</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --line:#E2E4EA; --line-strong:#C9CCD5;
+  --word:#E9ECF5; --ink:#16171B; --muted:#6B6E78;
+  --primary:#2C3A6B; --primary-ink:#FFFFFF; --focus:#4A64D0;
+  --r1:#2C3A6B; --r1-ink:#FFFFFF; --r2:#1D7A72; --r2-ink:#FFFFFF;
+  --ok:#2E7A57; --ok-bg:#E5F2EB; --bad:#B3392B; --bad-bg:#FBE8E5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131418; --surface:#1C1E24; --line:#2F323B; --line-strong:#454955;
+    --word:#2A2F3E; --ink:#ECEDF1; --muted:#A0A3AD;
+    --primary:#A9B8F2; --primary-ink:#12141B; --focus:#A9B8F2;
+    --r1:#A9B8F2; --r1-ink:#12141B; --r2:#7FD1C7; --r2-ink:#0F1A19;
+    --ok:#74CBA0; --ok-bg:#1A2C23; --bad:#F08C7E; --bad-bg:#3A211E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131418; --surface:#1C1E24; --line:#2F323B; --line-strong:#454955;
+  --word:#2A2F3E; --ink:#ECEDF1; --muted:#A0A3AD;
+  --primary:#A9B8F2; --primary-ink:#12141B; --focus:#A9B8F2;
+  --r1:#A9B8F2; --r1-ink:#12141B; --r2:#7FD1C7; --r2-ink:#0F1A19;
+  --ok:#74CBA0; --ok-bg:#1A2C23; --bad:#F08C7E; --bad-bg:#3A211E;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  font-size:16px; line-height:1.55; word-break:keep-all; -webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+h1{font-size:28px; line-height:1.3; font-weight:700; letter-spacing:-0.02em; margin:0 0 10px}
+h2{font-size:16px; font-weight:600; margin:0}
+.lede{color:var(--muted); margin:0 0 20px; max-width:64ch}
+.stage{color:var(--muted); font-size:14px; font-weight:600; margin:0 0 6px; font-variant-numeric:tabular-nums}
+
+.btn{appearance:none; border:0; border-radius:10px; height:48px; padding:0 22px; font:inherit; font-size:16px; font-weight:600; cursor:pointer; background:var(--primary); color:var(--primary-ink); display:inline-flex; align-items:center; justify-content:center; white-space:nowrap}
+.btn.ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 1px var(--line-strong)}
+.btn.small{height:38px; font-size:14px; padding:0 14px}
+:is(.btn,.brush,.addbrush,.pcard,.chip,.rslot,.rm,.zoom,.cb,.swap,.nm,.field input):focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+/* 시작·완료 */
+.intro{max-width:720px; margin:0 auto; padding:56px 20px 72px}
+.parts{margin:0 0 32px; padding-left:1.3em; display:grid; gap:10px; max-width:62ch}
+.field label{display:block; font-weight:600; margin-bottom:8px}
+.field input{height:48px; width:min(280px,100%); border:1px solid var(--line-strong); border-radius:10px; padding:0 14px; font:inherit; background:var(--surface); color:var(--ink)}
+.err{color:var(--bad); font-size:14px; margin:8px 0 0}
+.intro .btn{margin-top:24px}
+
+/* ===== 1단계: 색으로 묶기 ===== */
+.page{max-width:980px; margin:0 auto; padding:40px 20px 96px}
+.brushbar{position:sticky; top:0; z-index:6; background:var(--bg); padding:12px 0 14px; padding-top:calc(12px + env(safe-area-inset-top,0px)); display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.brushbar .lbl{font-size:14px; color:var(--muted); margin-right:2px}
+.brush{appearance:none; font:inherit; font-size:15px; font-weight:600; color:var(--ink); height:40px; padding:0 14px 0 10px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--surface); display:inline-flex; align-items:center; gap:8px; cursor:pointer}
+.brush .sw{width:18px; height:18px; border-radius:50%; background:var(--c); flex:none}
+.brush .n{font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums}
+.brush[aria-pressed="true"]{border-color:var(--c); background:color-mix(in srgb, var(--c) 16%, var(--surface)); box-shadow:inset 0 0 0 1.5px var(--c)}
+.addbrush{appearance:none; font:inherit; font-size:15px; font-weight:600; height:40px; padding:0 14px; border-radius:999px; border:1.5px dashed var(--line-strong); background:transparent; color:var(--muted); cursor:pointer}
+.addbrush:disabled{opacity:.4; cursor:not-allowed}
+.pcards{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+.pcard{appearance:none; font:inherit; font-size:20px; font-weight:600; color:var(--ink); background:var(--word); border:2px solid transparent; border-radius:14px; min-height:84px; padding:12px; position:relative; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-user-select:none; transition:background-color .12s, border-color .12s}
+.pcard:hover{border-color:var(--brush)}
+.pcard.on{background:color-mix(in srgb, var(--c) 26%, var(--surface)); border-color:var(--c)}
+.pcard .badge{position:absolute; top:7px; left:7px; min-width:22px; height:22px; padding:0 6px; border-radius:6px; background:var(--c); color:#fff; font-size:12px; font-weight:700; display:grid; place-items:center; font-variant-numeric:tabular-nums}
+.summary{list-style:none; margin:24px 0 0; padding:0; display:grid; gap:8px}
+.summary li{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-left:5px solid var(--c); border-radius:10px; padding:10px 12px}
+.summary b{font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums}
+.summary .ws{flex:1; min-width:150px}
+.nm{height:34px; width:160px; border:1px solid var(--line); border-radius:8px; padding:0 10px; font:inherit; font-size:14px; background:var(--surface); color:var(--ink)}
+.summary-empty{color:var(--muted); font-size:14px; margin:20px 0 0}
+.pagefoot{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-top:28px; padding-top:20px; border-top:1px solid var(--line)}
+.pagefoot p{margin:0; color:var(--muted); font-size:14.5px; max-width:52ch}
+
+/* ===== 2단계: 표정 매칭 ===== */
+.p2head{max-width:1360px; margin:0 auto; padding:32px 24px 0}
+.layout{display:grid; grid-template-columns:288px minmax(0,1fr); gap:28px; max-width:1360px; margin:0 auto; padding:16px 24px 48px}
+.side{position:sticky; top:calc(16px + env(safe-area-inset-top,0px)); align-self:start; display:flex; flex-direction:column; gap:14px; max-height:calc(100vh - 32px); overflow:auto}
+.bank,.savebar{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px}
+.hint{color:var(--muted); font-size:13.5px; margin:6px 0 14px}
+.hint.arming{color:var(--primary); font-weight:600}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{appearance:none; font:inherit; font-size:16px; font-weight:600; color:var(--ink); background:var(--word); border:0; border-radius:10px; height:42px; padding:0 12px; display:inline-flex; align-items:center; gap:7px; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:manipulation}
+.chip .cnt{font-size:12px; font-weight:700; min-width:20px; height:20px; border-radius:10px; display:none; place-items:center; padding:0 6px; font-variant-numeric:tabular-nums}
+.chip.used{background:transparent; color:var(--muted); box-shadow:inset 0 0 0 1px var(--line)}
+.chip.used .cnt{display:inline-grid; background:var(--ok-bg); color:var(--ok)}
+.chip.dup{background:var(--bad-bg); color:var(--bad); box-shadow:inset 0 0 0 1.5px var(--bad)}
+.chip.dup .cnt{display:inline-grid; background:var(--bad); color:var(--surface)}
+.chip[aria-pressed="true"]{background:var(--primary); color:var(--primary-ink); box-shadow:none}
+.legend{color:var(--muted); font-size:12.5px; margin:12px 0 0}
+.status{margin:0 0 14px; display:grid; gap:6px; font-size:14px}
+.status div{display:flex; justify-content:space-between; gap:8px}
+.status dt{color:var(--muted)}
+.status dd{margin:0; font-weight:600; font-variant-numeric:tabular-nums}
+.status dd.bad{color:var(--bad)} .status dd.ok{color:var(--ok)}
+.mini{display:none; margin:0; font-size:13.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+.savebar .btn{width:100%}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:18px; align-content:start}
+.face{background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .15s}
+.photo{position:relative; margin:0; aspect-ratio:1/1; background:#777}
+.photo img{width:100%; height:100%; object-fit:cover; display:block; -webkit-user-drag:none; user-select:none}
+.num{position:absolute; left:10px; top:10px; min-width:30px; height:30px; padding:0 8px; border-radius:8px; background:rgba(18,19,24,.74); color:#fff; font-weight:700; font-size:15px; display:grid; place-items:center; font-variant-numeric:tabular-nums}
+.zoom{position:absolute; right:10px; top:10px; width:34px; height:34px; border:0; border-radius:8px; background:rgba(18,19,24,.6); color:#fff; display:grid; place-items:center; cursor:zoom-in}
+.zoom svg{width:18px; height:18px}
+.ranks{padding:12px; display:grid; gap:10px}
+.rank{--rc:var(--r1); --rc-ink:var(--r1-ink); border-radius:10px; padding:8px 8px 8px 10px; background:color-mix(in srgb, var(--rc) 6%, var(--surface)); border:1px solid color-mix(in srgb, var(--rc) 28%, var(--line)); border-left:4px solid var(--rc)}
+.rank[data-rank="2"]{--rc:var(--r2); --rc-ink:var(--r2-ink)}
+.rank[data-rank="2"]:not(.filled){background:transparent; border-style:dashed; border-left-style:solid}
+.rrow{display:flex; align-items:center; gap:8px}
+.rlabel{font-size:13px; font-weight:700; color:var(--rc); white-space:nowrap; min-width:36px}
+.rlabel small{display:block; font-size:11px; font-weight:500; color:var(--muted); line-height:1.1}
+.rslot{appearance:none; flex:1; min-width:0; min-height:44px; border:1.5px dashed color-mix(in srgb, var(--rc) 45%, var(--line-strong)); border-radius:8px; background:var(--surface); color:var(--muted); font:inherit; font-size:13px; line-height:1.35; padding:6px 8px; cursor:pointer}
+.rword{flex:1; min-width:0; position:relative; min-height:44px; border-radius:8px; background:color-mix(in srgb, var(--rc) 16%, var(--surface)); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; padding:4px 34px}
+.rm{position:absolute; right:4px; top:50%; transform:translateY(-50%); width:30px; height:30px; border:0; border-radius:8px; background:transparent; color:var(--muted); font-size:19px; line-height:1; cursor:pointer}
+.conf{margin-top:8px}
+.conf .q{font-size:12.5px; color:var(--muted); margin:0 0 4px}
+.cbtns{display:grid; grid-template-columns:repeat(5,1fr); gap:4px}
+.cb{appearance:none; height:34px; border:1px solid var(--line-strong); border-radius:7px; background:var(--surface); color:var(--ink); font:inherit; font-size:15px; font-weight:600; cursor:pointer; font-variant-numeric:tabular-nums; padding:0}
+.cb[aria-pressed="true"]{background:var(--rc); border-color:var(--rc); color:var(--rc-ink)}
+.canchor{display:flex; justify-content:space-between; gap:6px; font-size:11.5px; color:var(--muted); margin-top:3px}
+.dupnote{color:var(--bad); font-size:12.5px; margin:6px 0 0}
+.rank.dup{border-color:var(--bad); border-left-color:var(--bad); background:var(--bad-bg)}
+.rank.dup .rword{background:color-mix(in srgb, var(--bad) 18%, var(--surface)); color:var(--bad)}
+.swap{appearance:none; justify-self:end; border:0; background:transparent; color:var(--muted); font:inherit; font-size:13px; font-weight:600; padding:4px 6px; border-radius:6px; cursor:pointer}
+.swap:hover{color:var(--ink)}
+.rank.over{box-shadow:0 0 0 2px var(--rc)}
+body.arming .face .rslot{border-color:var(--rc); color:var(--rc); font-weight:600}
+body.arming .face{cursor:copy}
+.face.over{box-shadow:0 0 0 3px var(--primary)}
+.face.flag{animation:flag 1.4s ease}
+@keyframes flag{0%,40%{box-shadow:0 0 0 3px var(--bad)} 100%{box-shadow:0 0 0 0 transparent}}
+
+dialog{border:0; border-radius:16px; padding:0; background:var(--surface); color:var(--ink); max-width:min(92vw,560px)}
+dialog::backdrop{background:rgba(10,11,14,.55)}
+.dlg{padding:24px}
+.dlg h2{font-size:19px; margin:0 0 12px}
+.dlg ul{margin:0 0 20px; padding-left:1.2em; display:grid; gap:6px}
+#zoom{max-width:min(96vw,1254px)}
+#zoom img{display:block; max-width:100%; max-height:calc(100dvh - 120px); width:auto; height:auto; margin:0 auto}
+#zoom .zbar{display:flex; justify-content:space-between; align-items:center; padding:12px 16px}
+.toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,20px); background:var(--ink); color:var(--bg); padding:12px 18px; border-radius:10px; font-size:14px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:90vw}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+@media (max-width:860px){
+  .p2head{padding:24px 12px 0}
+  .layout{grid-template-columns:minmax(0,1fr); gap:14px; padding:8px 12px calc(112px + env(safe-area-inset-bottom,0px))}
+  .side{display:contents}
+  .bank{position:sticky; top:0; z-index:10; min-width:0; margin:0 -12px; border-radius:0; border-width:0 0 1px; padding:12px; padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  .bank .hint{margin:4px 0 10px}
+  .chips{flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px}
+  .chip{flex:none}
+  .legend{display:none}
+  .savebar{position:fixed; left:0; right:0; bottom:0; z-index:10; border-radius:0; border-width:1px 0 0; padding:10px 14px; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px)); display:flex; align-items:center; gap:12px}
+  .status{display:none}
+  .mini{display:block; flex:1; min-width:0}
+  .savebar .btn{width:auto}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+  .ranks{padding:8px; gap:8px}
+  .rank{padding:6px 6px 6px 8px}
+  .rrow{flex-wrap:wrap; gap:4px}
+  .rlabel{min-width:0}
+  .rslot,.rword{flex-basis:100%}
+  .rword{font-size:16px}
+  .canchor{font-size:10.5px}
+}
+@media (max-width:640px){
+  .intro{padding:36px 16px 56px}
+  .page{padding:24px 12px 80px}
+  h1{font-size:23px}
+  .pcards{grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+  .pcard{font-size:17px; min-height:66px; padding:8px}
+  .brush,.addbrush{height:36px; font-size:14px}
+}
+@media (max-width:360px){ .grid{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+</style>
+</head>
+<body>
+
+<!-- 시작 -->
+<section class="intro" id="intro">
+  <h1>감정 단어 설문</h1>
+  <p class="lede">이 설문은 두 단계로 진행됩니다. 정답은 없으니 느끼는 대로 답해 주세요.</p>
+  <ol class="parts">
+    <li><strong>감정 단어 묶기.</strong> 감정 단어 13개 가운데 뜻이 비슷하다고 느끼는 것끼리 같은 색으로 칠해 묶습니다.</li>
+    <li><strong>표정과 단어 짝짓기.</strong> 얼굴 사진 13장마다 가장 잘 맞는 감정 단어를 1순위로 고르고, 얼마나 확신하는지 1점부터 5점까지 매깁니다. 함께 떠오르는 단어가 있으면 2순위도 고를 수 있습니다(선택).</li>
+  </ol>
+  <div class="field">
+    <label for="pid">참가자 번호</label>
+    <input id="pid" autocomplete="off" spellcheck="false" placeholder="예: P01">
+    <p class="err" id="pidErr" hidden>참가자 번호를 입력해야 시작할 수 있습니다.</p>
+  </div>
+  <button class="btn" id="startBtn" type="button">시작하기</button>
+</section>
+
+<!-- 1단계 -->
+<main class="page" id="p1" hidden>
+  <p class="stage">2단계 중 1단계</p>
+  <h1>감정 단어 묶기</h1>
+  <p class="lede">뜻이 비슷하다고 느끼는 감정끼리 같은 색으로 칠해 주세요. 위에서 색을 고른 뒤 카드를 누르면 그 색이 칠해지고, 같은 색으로 한 번 더 누르면 지워집니다. 다른 색을 고른 상태에서 누르면 그 색으로 바뀝니다. 묶음 개수와 크기는 자유이고, 혼자인 단어도 괜찮습니다.</p>
+  <div class="brushbar">
+    <span class="lbl">칠할 색</span>
+    <div id="brushes" style="display:contents"></div>
+  </div>
+  <div class="pcards" id="pcards"></div>
+  <ul class="summary" id="summary"></ul>
+  <p class="summary-empty" id="summaryEmpty">칠한 카드가 여기에 묶음별로 정리됩니다. 원하면 묶음에 이름을 붙일 수 있습니다.</p>
+  <div class="pagefoot">
+    <p id="p1hint" aria-live="polite"></p>
+    <button class="btn" id="nextBtn" type="button">다음 페이지</button>
+  </div>
+</main>
+
+<!-- 2단계 -->
+<div id="p2" hidden>
+  <header class="p2head">
+    <p class="stage">2단계 중 2단계</p>
+    <h1>표정과 단어 짝짓기</h1>
+    <p class="lede">얼굴마다 가장 잘 맞는 감정 단어를 1순위로 골라 주세요. 함께 떠오르는 단어가 있으면 2순위도 고를 수 있지만, 꼭 고르지 않아도 됩니다. 단어를 칸으로 끌어다 놓거나, 단어를 누른 다음 칸을 누르면 됩니다. 고르는 동안에는 같은 단어를 여러 얼굴의 1순위로 써도 되지만, 제출할 때는 1순위 단어가 얼굴마다 하나씩 겹치지 않게 짝지어져 있어야 합니다.</p>
+  </header>
+  <div class="layout">
+    <aside class="side">
+      <section class="bank" aria-label="감정 단어">
+        <h2>감정 단어</h2>
+        <p class="hint" id="bankHint" aria-live="polite"></p>
+        <div class="chips" id="chips"></div>
+        <p class="legend">숫자는 그 단어를 1순위로 고른 얼굴 수입니다. 빨간색은 1순위가 두 얼굴 이상에 겹쳤다는 뜻입니다.</p>
+      </section>
+      <section class="savebar" aria-label="진행 상황과 제출">
+        <dl class="status">
+          <div><dt>1순위를 고른 얼굴</dt><dd id="s1"></dd></div>
+          <div><dt>2순위를 고른 얼굴 (선택)</dt><dd id="s2"></dd></div>
+          <div><dt>1순위가 겹친 단어</dt><dd id="sDup"></dd></div>
+          <div><dt>확신도가 빠진 칸</dt><dd id="sConf"></dd></div>
+        </dl>
+        <p class="mini" id="mini"></p>
+        <button class="btn" id="submitBtn" type="button">제출하기</button>
+      </section>
+    </aside>
+    <main class="grid" id="grid" aria-label="얼굴 사진"></main>
+  </div>
+</div>
+
+<!-- 완료 -->
+<section class="intro" id="done" hidden>
+  <h1>응답을 모두 마쳤습니다</h1>
+  <p class="lede" id="doneText"></p>
+  <button class="btn ghost" id="resaveBtn" type="button">응답 파일 다시 저장</button>
+</section>
+
+<dialog id="zoom">
+  <img alt="">
+  <div class="zbar"><strong id="zoomTitle"></strong><button class="btn ghost small" type="button" data-close>닫기</button></div>
+</dialog>
+<dialog id="issues">
+  <div class="dlg">
+    <h2 id="issueTitle"></h2>
+    <ul id="issueList"></ul>
+    <button class="btn" type="button" data-close>확인</button>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ===== 설정 ===== */
+const ITEMS = __ITEMS__;     // 00_감정단어_이미지_일람표.csv 13행 + 원본 이미지(내장)
+const CONFIG = {
+  shuffleCards: true,        // 1단계 카드 순서 무작위
+  shuffleImages: true,       // 2단계 얼굴 순서 무작위
+  shuffleWords: true,        // 2단계 단어 목록 순서 무작위
+  confMin: 1, confMax: 5,    // 확신도 척도
+  confQuestion: '얼마나 확신하나요?',
+  confLabels: ['전혀 확신 없음', '매우 확신함'],
+  uniqueFirst: true,         // 제출 시 1순위 단어는 얼굴마다 겹치지 않게 (13개 1:1)
+  uniqueSecond: false        // true면 2순위도 겹치지 않게
+};
+/* ================ */
+
+const WORDS = ITEMS.map(it => it.word);
+const N = ITEMS.length;
+const byId = Object.fromEntries(ITEMS.map(it => [it.id, it]));
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length-1) - 0xAC00; return (c>=0 && c<=11171 && c%28) ? a : b; };
+const PALETTE = ['#3F5FB0','#D0573A','#2E8A5F','#8B55B5','#C28F12','#1F8C9C','#B23C77','#6B7A2A','#5B6B8E','#A0522D','#2F6F6F','#7A4E9C','#8C6D1A'];
+const CONF_VALUES = Array.from({length:CONFIG.confMax-CONFIG.confMin+1}, (_,i)=>CONFIG.confMin+i);
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function stamp(d=new Date()){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+function download(name, text){
+  const blob = new Blob([text], {type:'application/jsonl'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
+}
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600); }
+function showIssues(title, items){
+  $('#issueTitle').textContent = title;
+  $('#issueList').innerHTML = items.map(t=>`<li>${esc(t)}</li>`).join('');
+  $('#issues').showModal();
+}
+$$('dialog').forEach(d => d.addEventListener('click', e => { if(e.target===d || e.target.closest('[data-close]')) d.close(); }));
+
+const S = {
+  pid:'', sessionId: Math.random().toString(36).slice(2,10), startedAt:null, t0:0, page:'intro', output:null,
+  p1:{ order:[], groups:[], nextId:1, brush:null, assign:{}, events:[], startedAt:null, finishedAt:null },
+  p2:{ faceOrder:[], wordOrder:[], faces:{}, events:[], armed:null, startedAt:null }
+};
+const tms = () => Math.round(performance.now()-S.t0);
+function go(page){
+  ['intro','p1','p2','done'].forEach(id => $('#'+id).hidden = (id!==page));
+  S.page = page; window.scrollTo(0,0);
+}
+
+/* ===================== 시작 ===================== */
+$('#startBtn').addEventListener('click', () => {
+  const pid = $('#pid').value.trim();
+  if(!pid){ $('#pidErr').hidden=false; $('#pid').focus(); return; }
+  S.pid = pid; S.startedAt = new Date(); S.t0 = performance.now();
+  initP1(); go('p1');
+});
+$('#pid').addEventListener('keydown', e => { if(e.key==='Enter') $('#startBtn').click(); });
+
+/* ===================== 1단계: 색으로 묶기 ===================== */
+const P1 = S.p1;
+const gColor = g => PALETTE[(g.num-1) % PALETTE.length];
+const gOf = w => P1.groups.find(g => g.id===P1.assign[w]) || null;
+const gWords = g => P1.order.filter(w => P1.assign[w]===g.id);
+function log1(action, extra={}){ P1.events.push(Object.assign({ t_ms:tms(), action }, extra)); }
+function addGroup(){
+  if(P1.groups.length >= N) return;
+  const g = { id:'g'+P1.nextId, num:P1.nextId, name:'' }; P1.nextId++;
+  P1.groups.push(g); P1.brush = g.id;
+  log1('add_group', { group_id:g.id });
+}
+function initP1(){
+  P1.order = WORDS.slice(); if(CONFIG.shuffleCards) shuffle(P1.order);
+  P1.startedAt = new Date();
+  addGroup(); renderP1();
+}
+function renderP1(){
+  const cur = P1.groups.find(g => g.id===P1.brush);
+  $('#brushes').innerHTML = P1.groups.map(g => {
+    const n = gWords(g).length;
+    return `<button class="brush" type="button" data-g="${g.id}" aria-pressed="${g.id===P1.brush}" style="--c:${gColor(g)}"><span class="sw" aria-hidden="true"></span>묶음 ${g.num}<span class="n">${n ? n+'개' : ''}</span></button>`;
+  }).join('') + `<button class="addbrush" id="addBrush" type="button"${P1.groups.length>=N?' disabled':''}>+ 색 추가</button>`;
+
+  $('#pcards').style.setProperty('--brush', cur ? gColor(cur) : 'transparent');
+  $('#pcards').innerHTML = P1.order.map(w => {
+    const g = gOf(w);
+    return `<button class="pcard${g?' on':''}" type="button" data-w="${esc(w)}"${g?` style="--c:${gColor(g)}"`:''} aria-label="${esc(w)}, ${g?`묶음 ${g.num}`:'아직 안 칠함'}">${g?`<span class="badge" aria-hidden="true">${g.num}</span>`:''}${esc(w)}</button>`;
+  }).join('');
+
+  const used = P1.groups.filter(g => gWords(g).length);
+  $('#summary').innerHTML = used.map(g => `<li style="--c:${gColor(g)}"><b>묶음 ${g.num}</b><span class="ws">${esc(gWords(g).join(', '))}</span><input class="nm" data-g="${g.id}" value="${esc(g.name)}" placeholder="이름 (선택)" aria-label="묶음 ${g.num} 이름"></li>`).join('');
+  $('#summaryEmpty').hidden = used.length > 0;
+
+  const left = P1.order.filter(w => !P1.assign[w]).length;
+  $('#p1hint').textContent = left
+    ? `아직 칠하지 않은 카드가 ${left}개 있습니다. 모두 칠해야 다음 페이지로 넘어갈 수 있습니다.`
+    : `묶음 ${used.length}개로 모두 칠했습니다. 다음 페이지로 넘어가면 이 단계로 돌아올 수 없습니다.`;
+}
+$('#p1').addEventListener('click', e => {
+  const b = e.target.closest('.brush');
+  if(b){ P1.brush = b.dataset.g; renderP1(); return; }
+  if(e.target.closest('#addBrush')){ addGroup(); renderP1(); return; }
+  const c = e.target.closest('.pcard');
+  if(c){
+    const w = c.dataset.w, prev = P1.assign[w] || null;
+    if(!P1.brush){ toast('먼저 칠할 색을 고르세요.'); return; }
+    if(prev === P1.brush){ delete P1.assign[w]; log1('erase', { word:w, prev_group_id:prev }); }
+    else { P1.assign[w] = P1.brush; log1('paint', { word:w, group_id:P1.brush, prev_group_id:prev }); }
+    renderP1();
+    const again = $(`.pcard[data-w="${CSS.escape(w)}"]`); if(again) again.focus({preventScroll:true});
+  }
+});
+$('#p1').addEventListener('input', e => { if(e.target.classList.contains('nm')){ const g=P1.groups.find(x=>x.id===e.target.dataset.g); if(g) g.name=e.target.value; } });
+$('#p1').addEventListener('change', e => { if(e.target.classList.contains('nm')){ const g=P1.groups.find(x=>x.id===e.target.dataset.g); if(g){ g.name=e.target.value.trim(); log1('rename', { group_id:g.id, name:g.name }); } } });
+$('#nextBtn').addEventListener('click', () => {
+  const left = P1.order.filter(w => !P1.assign[w]);
+  if(left.length){
+    showIssues('아직 다음 페이지로 넘어갈 수 없습니다', [`색을 칠하지 않은 카드: ${left.join(', ')}`, '모든 카드를 어느 한 묶음의 색으로 칠해 주세요. 혼자 한 묶음이어도 괜찮습니다.']);
+    log1('next_blocked', { uncolored:left });
+    return;
+  }
+  P1.finishedAt = new Date(); log1('finish');
+  initP2(); go('p2');
+});
+
+/* ===================== 2단계: 1·2순위 + 확신도 ===================== */
+const P2 = S.p2;
+const cards = {};
+const faceNo = id => P2.faceOrder.indexOf(id) + 1;
+function log2(action, id, extra={}){ P2.events.push(Object.assign({ t_ms:tms(), action, image_id:id||null }, extra)); }
+const SVG_ZOOM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M11 8.5v5M8.5 11h5"/></svg>';
+
+function initP2(){
+  P2.startedAt = new Date();
+  P2.faceOrder = ITEMS.map(it=>it.id); if(CONFIG.shuffleImages) shuffle(P2.faceOrder);
+  P2.wordOrder = WORDS.slice(); if(CONFIG.shuffleWords) shuffle(P2.wordOrder);
+  ITEMS.forEach(it => { P2.faces[it.id] = { r:{1:{word:null,conf:null}, 2:{word:null,conf:null}}, wordChanges:0, confChanges:0 }; });
+  buildBank(); buildGrid(); refreshP2();
+}
+function buildBank(){
+  $('#chips').innerHTML = P2.wordOrder.map(w => `<button class="chip" type="button" draggable="true" data-word="${esc(w)}" aria-pressed="false"><span>${esc(w)}</span><span class="cnt" aria-hidden="true"></span></button>`).join('');
+  $$('.chip').forEach(ch => {
+    const w = ch.dataset.word;
+    ch.addEventListener('click', () => arm(P2.armed===w ? null : w));
+    ch.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', w); e.dataTransfer.effectAllowed='copy'; arm(null); });
+  });
+}
+function arm(w){ P2.armed = w; document.body.classList.toggle('arming', !!w); refreshP2(); }
+
+function rankHTML(r, n){
+  return `<div class="rank" data-rank="${r}">
+    <div class="rrow">
+      <span class="rlabel">${r}순위${r===2 ? '<small> 선택</small>' : ''}</span>
+      <button class="rslot" type="button" data-rank="${r}"></button>
+      <div class="rword" hidden><span class="w"></span><button class="rm" type="button" data-rank="${r}" aria-label="얼굴 ${n} ${r}순위 단어 빼기">×</button></div>
+    </div>
+    <div class="conf" hidden>
+      <p class="q">${esc(CONFIG.confQuestion)}</p>
+      <div class="cbtns" role="group" aria-label="얼굴 ${n} ${r}순위 확신도">${CONF_VALUES.map(v=>`<button class="cb" type="button" data-rank="${r}" data-v="${v}" aria-pressed="false">${v}</button>`).join('')}</div>
+      <div class="canchor" aria-hidden="true"><span>${esc(CONFIG.confLabels[0])}</span><span>${esc(CONFIG.confLabels[1])}</span></div>
+    </div>
+    <p class="dupnote" hidden></p>
+  </div>`;
+}
+function buildGrid(){
+  const grid = $('#grid'); grid.innerHTML='';
+  P2.faceOrder.forEach((id,i) => {
+    const n=i+1, it=byId[id];
+    const el = document.createElement('article');
+    el.className='face'; el.dataset.id=id;
+    el.innerHTML = `
+      <figure class="photo">
+        <img src="${it.src}" alt="얼굴 사진 ${n}" draggable="false" decoding="async">
+        <span class="num" aria-hidden="true">${n}</span>
+        <button class="zoom" type="button" aria-label="얼굴 ${n} 크게 보기">${SVG_ZOOM}</button>
+      </figure>
+      <div class="ranks">${rankHTML(1,n)}${rankHTML(2,n)}<button class="swap" type="button" hidden>순위 바꾸기 ⇅</button></div>`;
+    grid.appendChild(el);
+    cards[id] = { el, rank:{1:$('.rank[data-rank="1"]',el), 2:$('.rank[data-rank="2"]',el)}, swap:$('.swap',el) };
+
+    el.addEventListener('click', e => {
+      const t = e.target;
+      if(t.closest('.zoom')) return openZoom(id);
+      const rm = t.closest('.rm'); if(rm) return clearRank(id, +rm.dataset.rank);
+      const cb = t.closest('.cb'); if(cb) return setConf(id, +cb.dataset.rank, +cb.dataset.v);
+      if(t.closest('.swap')) return swapRanks(id);
+      const rk = t.closest('.rank');
+      if(P2.armed){ rk ? place(id, +rk.dataset.rank, P2.armed) : autoPlace(id, P2.armed); return; }
+      if(t.closest('.rslot')) toast('먼저 감정 단어 목록에서 단어를 고르세요.');
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault(); e.dataTransfer.dropEffect='copy';
+      const rk = e.target.closest('.rank');
+      el.classList.toggle('over', !rk);
+      [1,2].forEach(r => cards[id].rank[r].classList.toggle('over', cards[id].rank[r]===rk));
+    });
+    el.addEventListener('dragleave', e => { if(!el.contains(e.relatedTarget)){ el.classList.remove('over'); [1,2].forEach(r=>cards[id].rank[r].classList.remove('over')); } });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const w = e.dataTransfer.getData('text/plain'), rk = e.target.closest('.rank');
+      el.classList.remove('over'); [1,2].forEach(r=>cards[id].rank[r].classList.remove('over'));
+      if(!P2.wordOrder.includes(w)) return;
+      rk ? place(id, +rk.dataset.rank, w) : autoPlace(id, w);
+    });
+  });
+}
+
+function autoPlace(id, w){
+  const f = P2.faces[id];
+  if(f.r[1].word===w || f.r[2].word===w){ arm(null); return; }
+  if(!f.r[1].word) return place(id, 1, w);
+  if(!f.r[2].word) return place(id, 2, w);
+  toast('이미 1순위와 2순위가 있습니다. 바꿀 칸을 직접 눌러 주세요.');
+}
+function place(id, r, w){
+  const f = P2.faces[id], o = 3-r;
+  arm(null);
+  if(f.r[r].word===w) return;
+  if(f.r[o].word===w){                     // 같은 얼굴의 다른 순위에 있던 단어 → 자리 맞바꿈
+    [f.r[r], f.r[o]] = [f.r[o], f.r[r]];
+    log2('swap', id, { rank1:f.r[1].word, rank2:f.r[2].word });
+  } else {
+    const prev = f.r[r].word;
+    f.r[r] = { word:w, conf:null }; f.wordChanges++;
+    log2(prev ? 'replace' : 'assign', id, { rank:r, word:w, prev_word:prev });
+  }
+  cards[id].el.classList.remove('flag');
+  refreshP2();
+}
+function clearRank(id, r){
+  const f = P2.faces[id]; if(!f.r[r].word) return;
+  const prev = f.r[r].word; f.r[r] = { word:null, conf:null }; f.wordChanges++;
+  log2('remove', id, { rank:r, prev_word:prev }); refreshP2();
+}
+function swapRanks(id){
+  const f = P2.faces[id]; [f.r[1], f.r[2]] = [f.r[2], f.r[1]];
+  log2('swap', id, { rank1:f.r[1].word, rank2:f.r[2].word }); refreshP2();
+}
+function setConf(id, r, v){
+  const f = P2.faces[id]; if(!f.r[r].word || f.r[r].conf===v) return;
+  f.r[r].conf = v; f.confChanges++;
+  log2('confidence', id, { rank:r, word:f.r[r].word, confidence:v }); refreshP2();
+}
+
+function validate2(){
+  const use1={}, use2={}; WORDS.forEach(w => { use1[w]=[]; use2[w]=[]; });
+  P2.faceOrder.forEach(id => { const f=P2.faces[id]; if(f.r[1].word) use1[f.r[1].word].push(id); if(f.r[2].word) use2[f.r[2].word].push(id); });
+  const miss1 = P2.faceOrder.filter(id => !P2.faces[id].r[1].word);
+  const miss2 = P2.faceOrder.filter(id => !P2.faces[id].r[2].word);
+  const noConf = []; P2.faceOrder.forEach(id => [1,2].forEach(r => { const s=P2.faces[id].r[r]; if(s.word && s.conf==null) noConf.push({id,r}); }));
+  const dup1 = CONFIG.uniqueFirst ? WORDS.filter(w => use1[w].length>1) : [];
+  const unused1 = CONFIG.uniqueFirst ? P2.wordOrder.filter(w => !use1[w].length) : [];
+  const dup2 = CONFIG.uniqueSecond ? WORDS.filter(w => use2[w].length>1) : [];
+  return { use1, use2, miss1, miss2, noConf, dup1, unused1, dup2,
+           ok: !miss1.length && !noConf.length && !dup1.length && !unused1.length && !dup2.length };
+}
+function refreshP2(){
+  const v = validate2();
+  $$('.chip').forEach(ch => {
+    const w = ch.dataset.word, n = v.use1[w].length;
+    ch.classList.toggle('used', n===1); ch.classList.toggle('dup', CONFIG.uniqueFirst && n>1);
+    $('.cnt',ch).textContent = n || '';
+    ch.setAttribute('aria-pressed', P2.armed===w ? 'true' : 'false');
+    ch.setAttribute('aria-label', `${w}, 1순위로 ${n}개 얼굴에 사용`);
+  });
+  const hint = $('#bankHint');
+  hint.textContent = P2.armed
+    ? `‘${P2.armed}’${josa(P2.armed,'을','를')} 놓을 1순위 또는 2순위 칸을 누르세요. 취소하려면 단어를 한 번 더 누르거나 Esc를 누르세요.`
+    : '단어를 칸으로 끌어다 놓거나, 단어를 누른 뒤 칸을 누르세요.';
+  hint.classList.toggle('arming', !!P2.armed);
+
+  P2.faceOrder.forEach(id => {
+    const f = P2.faces[id], c = cards[id];
+    [1,2].forEach(r => {
+      const s = f.r[r], box = c.rank[r];
+      $('.rslot',box).hidden = !!s.word;
+      $('.rslot',box).textContent = P2.armed ? `여기에 ‘${P2.armed}’ 놓기` : (r===1 ? '1순위 단어를 여기에 놓으세요' : '있으면 2순위 단어를 놓으세요');
+      $('.rword',box).hidden = !s.word;
+      $('.rword .w',box).textContent = s.word || '';
+      $('.conf',box).hidden = !s.word;
+      $$('.cb',box).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v===s.conf)));
+      const pool = r===1 ? (CONFIG.uniqueFirst ? v.use1 : null) : (CONFIG.uniqueSecond ? v.use2 : null);
+      const others = (pool && s.word) ? pool[s.word].filter(x=>x!==id).map(faceNo).sort((a,b)=>a-b) : [];
+      box.classList.toggle('dup', others.length>0);
+      box.classList.toggle('filled', !!s.word);
+      $('.dupnote',box).hidden = !others.length;
+      $('.dupnote',box).textContent = others.length ? `얼굴 ${others.join(', ')}번의 ${r}순위와 겹칩니다.` : '';
+    });
+    c.swap.hidden = !(f.r[1].word && f.r[2].word);
+  });
+
+  const n1 = N - v.miss1.length, n2 = N - v.miss2.length;
+  $('#s1').textContent = `${n1} / ${N}`; $('#s1').className = n1===N ? 'ok' : '';
+  $('#s2').textContent = `${n2} / ${N}`;
+  $('#sDup').textContent = v.dup1.length; $('#sDup').className = v.dup1.length ? 'bad' : '';
+  $('#sConf').textContent = v.noConf.length; $('#sConf').className = v.noConf.length ? 'bad' : '';
+  $('#mini').textContent = v.ok ? '제출할 수 있습니다.' : `1순위 ${n1}/${N}, 겹침 ${v.dup1.length}, 확신도 빠짐 ${v.noConf.length}`;
+}
+
+function openZoom(id){
+  const d=$('#zoom'); $('img',d).src=byId[id].src; $('img',d).alt=`얼굴 사진 ${faceNo(id)} 확대`;
+  $('#zoomTitle').textContent = `얼굴 ${faceNo(id)}`; d.showModal();
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape' && S.page==='p2' && P2.armed) arm(null); });
+
+/* ===================== 제출 (JSONL) ===================== */
+$('#submitBtn').addEventListener('click', () => {
+  const v = validate2();
+  if(!v.ok){
+    const nums = ids => ids.map(faceNo).sort((a,b)=>a-b).join(', ');
+    const items = [];
+    if(v.miss1.length) items.push(`1순위가 없는 얼굴: ${nums(v.miss1)}번`);
+    v.dup1.forEach(w => items.push(`‘${w}’${josa(w,'이','가')} 얼굴 ${nums(v.use1[w])}번의 1순위로 함께 쓰였습니다. 1순위는 단어마다 한 얼굴에만 쓸 수 있습니다.`));
+    v.dup2.forEach(w => items.push(`‘${w}’${josa(w,'이','가')} 얼굴 ${nums(v.use2[w])}번의 2순위로 함께 쓰였습니다.`));
+    if(v.unused1.length) items.push(`아직 1순위로 쓰지 않은 단어: ${v.unused1.join(', ')}`);
+    if(v.noConf.length) items.push(`확신도를 고르지 않은 칸: ${v.noConf.sort((a,b)=>faceNo(a.id)-faceNo(b.id)||a.r-b.r).map(x=>`얼굴 ${faceNo(x.id)}번 ${x.r}순위`).join(', ')}. 2순위는 확신도를 고르거나 단어를 빼면 됩니다.`);
+    showIssues('아직 제출할 수 없습니다', items);
+    const flagged = new Set([...v.miss1, ...v.noConf.map(x=>x.id), ...v.dup1.flatMap(w=>v.use1[w]), ...v.dup2.flatMap(w=>v.use2[w])]);
+    flagged.forEach(id => { const el=cards[id].el; el.classList.remove('flag'); void el.offsetWidth; el.classList.add('flag'); });
+    log2('submit_blocked', null, { miss1:v.miss1.length, dup1:v.dup1.length, no_conf:v.noConf.length });
+    return;
+  }
+  const submittedAt = new Date();
+  const common = { participant_id:S.pid, session_id:S.sessionId };
+
+  // 1단계: 묶음 결과 1줄
+  const used = P1.groups.filter(g => gWords(g).length);
+  const groups = used.map((g,i) => ({ group_no:i+1, label_shown:`묶음 ${g.num}`, color:gColor(g), name:g.name, size:gWords(g).length, words:gWords(g) }));
+  const assignment = {}; WORDS.forEach(w => { assignment[w] = used.findIndex(g => g.id===P1.assign[w]) + 1; });
+  const lines = [{
+    ...common, part:'word_clustering',
+    n_words:N, n_groups:groups.length, groups, assignment,
+    card_order:P1.order, history:P1.events,
+    started_at:P1.startedAt.toISOString(), finished_at:P1.finishedAt.toISOString(),
+    duration_sec:+((P1.finishedAt-P1.startedAt)/1000).toFixed(1)
+  }];
+
+  // 2단계: 얼굴 1장당 1줄
+  P2.faceOrder.forEach((id,i) => {
+    const it=byId[id], f=P2.faces[id];
+    lines.push({
+      ...common, part:'face_matching',
+      face_no:i+1, image_id:id, image_file:it.file, target_word:it.word,
+      rank1_word:f.r[1].word, rank1_confidence:f.r[1].conf,
+      rank2_word:f.r[2].word, rank2_confidence:f.r[2].conf,
+      rank1_correct:f.r[1].word===it.word, target_in_top2:(f.r[1].word===it.word || f.r[2].word===it.word),
+      n_word_changes:f.wordChanges, n_confidence_changes:f.confChanges,
+      history:P2.events.filter(e=>e.image_id===id).map(({image_id, ...rest}) => rest),
+      word_bank_order:P2.wordOrder,
+      started_at:P2.startedAt.toISOString(), submitted_at:submittedAt.toISOString(),
+      duration_sec:+((submittedAt-P2.startedAt)/1000).toFixed(1)
+    });
+  });
+
+  S.output = { name:`emotion_survey_${S.pid}_${stamp(submittedAt)}.jsonl`, text: lines.map(l=>JSON.stringify(l)).join('\n') + '\n' };
+  download(S.output.name, S.output.text);
+  go('done');
+  $('#doneText').textContent = `응답 파일(${S.output.name})을 내려받았습니다. 파일이 보이지 않으면 아래 버튼을 눌러 다시 저장해 주세요. 저장을 확인했으면 창을 닫으셔도 됩니다.`;
+});
+$('#resaveBtn').addEventListener('click', () => download(S.output.name, S.output.text));
+window.addEventListener('beforeunload', e => { if(S.page==='p1' || S.page==='p2'){ e.preventDefault(); e.returnValue=''; } });
+</script>
+</body>
+</html>
