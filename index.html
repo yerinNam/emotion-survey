@@ -221,7 +221,7 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   <ol class="parts">
     <li><strong>감정 유사도 평가.</strong> 감정 단어 두 개를 한 쌍씩 보고, 두 감정의 뜻이 얼마나 비슷한지 1점부터 10점까지 매깁니다. 모두 78쌍입니다.</li>
     <li><strong>감정 단어 묶기.</strong> 감정 단어 13개 가운데 뜻이 비슷하다고 느끼는 것끼리 같은 색으로 칠해 묶습니다.</li>
-    <li><strong>표정과 단어 짝짓기.</strong> 얼굴 사진 13장마다 가장 잘 맞는 감정 단어를 1순위로 고르고, 원하면 그다음으로 잘 맞는 단어를 2순위로 고릅니다(선택). 고른 단어마다 확신도를 1점부터 5점까지 매깁니다.</li>
+    <li><strong>표정과 단어 짝짓기.</strong> 얼굴 사진 13장마다 가장 잘 맞는 감정 단어를 1순위로 고르고 확신도를 1점부터 5점까지 매깁니다. 고르는 동안 후보 단어를 2순위 칸에 잠시 놓아 둘 수 있지만, 제출할 때는 얼굴마다 1순위 단어만 남겨야 합니다.</li>
   </ol>
   <div class="field">
     <label for="pid">참가자 번호</label>
@@ -283,7 +283,7 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   <header class="p2head">
     <p class="stage">3단계 중 3단계</p>
     <h1>표정과 단어 짝짓기</h1>
-    <p class="lede">모든 얼굴에 1순위 감정 단어를 고르고 확신도를 매겨 주세요. 2순위는 떠오르는 단어가 있을 때만 고르면 되고, 고른 경우에는 확신도도 매겨 주세요. 단어를 칸으로 끌어다 놓거나, 단어를 누른 다음 칸을 누르면 됩니다. 제출할 때는 1순위 단어가 얼굴마다 하나씩 겹치지 않게 짝지어져 있어야 합니다.</p>
+    <p class="lede">모든 얼굴에 1순위 감정 단어를 고르고 확신도를 매겨 주세요. 2순위 칸은 고민 중인 후보를 잠시 놓아 두는 곳이며, 제출하기 전에 모두 비워야 합니다. 단어를 칸으로 끌어다 놓거나, 단어를 누른 다음 칸을 누르면 됩니다. 제출할 때는 1순위 단어가 얼굴마다 하나씩 겹치지 않게 짝지어져 있어야 합니다.</p>
   </header>
   <div class="layout">
     <aside class="side">
@@ -296,7 +296,7 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
       <section class="savebar" aria-label="진행 상황과 제출">
         <dl class="status">
           <div><dt>1순위를 고른 얼굴</dt><dd id="s1"></dd></div>
-          <div><dt>2순위를 고른 얼굴 (선택)</dt><dd id="s2"></dd></div>
+          <div><dt>2순위가 남은 얼굴</dt><dd id="s2"></dd></div>
           <div><dt>1순위가 겹친 단어</dt><dd id="sDup"></dd></div>
           <div><dt>확신도가 빠진 칸</dt><dd id="sConf"></dd></div>
         </dl>
@@ -665,12 +665,13 @@ function validate2(){
   P2.faceOrder.forEach(id => { const f=P2.faces[id]; if(f.r[1].word) use1[f.r[1].word].push(id); if(f.r[2].word) use2[f.r[2].word].push(id); });
   const miss1 = P2.faceOrder.filter(id => !P2.faces[id].r[1].word);
   const miss2 = P2.faceOrder.filter(id => !P2.faces[id].r[2].word);
-  const noConf = []; P2.faceOrder.forEach(id => [1,2].forEach(r => { const s=P2.faces[id].r[r]; if(s.word && s.conf==null) noConf.push({id,r}); }));
+  const has2 = P2.faceOrder.filter(id => P2.faces[id].r[2].word);   // 2nd slot must be empty on submit
+  const noConf = []; P2.faceOrder.forEach(id => [1].forEach(r => { const s=P2.faces[id].r[r]; if(s.word && s.conf==null) noConf.push({id,r}); }));
   const dup1 = CONFIG.uniqueFirst ? WORDS.filter(w => use1[w].length>1) : [];
   const unused1 = CONFIG.uniqueFirst ? P2.wordOrder.filter(w => !use1[w].length) : [];
   const dup2 = CONFIG.uniqueSecond ? WORDS.filter(w => use2[w].length>1) : [];
-  return { use1, use2, miss1, miss2, noConf, dup1, unused1, dup2,
-           ok: !miss1.length && !noConf.length && !dup1.length && !unused1.length && !dup2.length };
+  return { use1, use2, miss1, miss2, has2, noConf, dup1, unused1, dup2,
+           ok: !miss1.length && !has2.length && !noConf.length && !dup1.length && !unused1.length && !dup2.length };
 }
 function refreshP2(){
   const v = validate2();
@@ -692,10 +693,10 @@ function refreshP2(){
     [1,2].forEach(r => {
       const s = f.r[r], box = c.rank[r];
       $('.rslot',box).hidden = !!s.word;
-      $('.rslot',box).textContent = P2.armed ? `여기에 ‘${P2.armed}’ 놓기` : (r===2 ? '2순위 단어를 여기에 놓으세요 (선택)' : '1순위 단어를 여기에 놓으세요');
+      $('.rslot',box).textContent = P2.armed ? `여기에 ‘${P2.armed}’ 놓기` : (r===2 ? '후보 단어를 잠시 놓아 두는 칸 (제출 전 비우기)' : '1순위 단어를 여기에 놓으세요');
       $('.rword',box).hidden = !s.word;
       $('.rword .w',box).textContent = s.word || '';
-      $('.conf',box).hidden = !s.word;
+      $('.conf',box).hidden = !s.word || r===2;   // no confidence for the 2nd (candidate) slot
       $$('.cb',box).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v===s.conf)));
       const pool = r===1 ? (CONFIG.uniqueFirst ? v.use1 : null) : (CONFIG.uniqueSecond ? v.use2 : null);
       const others = (pool && s.word) ? pool[s.word].filter(x=>x!==id).map(faceNo).sort((a,b)=>a-b) : [];
@@ -709,10 +710,10 @@ function refreshP2(){
 
   const n1 = N - v.miss1.length, n2 = N - v.miss2.length;
   $('#s1').textContent = `${n1} / ${N}`; $('#s1').className = n1===N ? 'ok' : '';
-  $('#s2').textContent = `${n2} / ${N}`; $('#s2').className = n2===N ? 'ok' : '';
+  $('#s2').textContent = v.has2.length; $('#s2').className = v.has2.length ? 'bad' : '';
   $('#sDup').textContent = v.dup1.length; $('#sDup').className = v.dup1.length ? 'bad' : '';
   $('#sConf').textContent = v.noConf.length; $('#sConf').className = v.noConf.length ? 'bad' : '';
-  $('#mini').textContent = v.ok ? '제출할 수 있습니다.' : `1순위 ${n1}/${N}, 2순위 ${n2}/${N}, 겹침 ${v.dup1.length}, 확신도 빠짐 ${v.noConf.length}`;
+  $('#mini').textContent = v.ok ? '제출할 수 있습니다.' : `1순위 ${n1}/${N}, 2순위 남음 ${v.has2.length}, 겹침 ${v.dup1.length}, 확신도 빠짐 ${v.noConf.length}`;
 }
 
 function openZoom(id){
@@ -731,11 +732,12 @@ $('#submitBtn').addEventListener('click', () => {
     v.dup1.forEach(w => items.push(`‘${w}’${josa(w,'이','가')} 얼굴 ${nums(v.use1[w])}번의 1순위로 함께 쓰였습니다. 1순위는 단어마다 한 얼굴에만 쓸 수 있습니다.`));
     v.dup2.forEach(w => items.push(`‘${w}’${josa(w,'이','가')} 얼굴 ${nums(v.use2[w])}번의 2순위로 함께 쓰였습니다.`));
     if(v.unused1.length) items.push(`아직 1순위로 쓰지 않은 단어: ${v.unused1.join(', ')}`);
+    if(v.has2.length) items.push(`2순위가 남아 있는 얼굴: ${nums(v.has2)}번. 제출하기 전에 얼굴마다 1순위 단어만 남기고 2순위는 비워 주세요.`);
     if(v.noConf.length) items.push(`확신도를 고르지 않은 칸: ${v.noConf.sort((a,b)=>faceNo(a.id)-faceNo(b.id)||a.r-b.r).map(x=>`얼굴 ${faceNo(x.id)}번 ${x.r}순위`).join(', ')}`);
     showIssues('아직 제출할 수 없습니다', items);
-    const flagged = new Set([...v.miss1, ...v.noConf.map(x=>x.id), ...v.dup1.flatMap(w=>v.use1[w]), ...v.dup2.flatMap(w=>v.use2[w])]);
+    const flagged = new Set([...v.miss1, ...v.has2, ...v.noConf.map(x=>x.id), ...v.dup1.flatMap(w=>v.use1[w]), ...v.dup2.flatMap(w=>v.use2[w])]);
     flagged.forEach(id => { const el=cards[id].el; el.classList.remove('flag'); void el.offsetWidth; el.classList.add('flag'); });
-    log2('submit_blocked', null, { miss1:v.miss1.length, dup1:v.dup1.length, no_conf:v.noConf.length });
+    log2('submit_blocked', null, { miss1:v.miss1.length, rank2_left:v.has2.length, dup1:v.dup1.length, no_conf:v.noConf.length });
     return;
   }
   const submittedAt = new Date();
