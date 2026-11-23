@@ -49,6 +49,7 @@ h2{font-size:16px; font-weight:600; margin:0}
 .btn{appearance:none; border:0; border-radius:10px; height:48px; padding:0 22px; font:inherit; font-size:16px; font-weight:600; cursor:pointer; background:var(--primary); color:var(--primary-ink); display:inline-flex; align-items:center; justify-content:center; white-space:nowrap}
 .btn.ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 1px var(--line-strong)}
 .btn.small{height:38px; font-size:14px; padding:0 14px}
+.btn:disabled{opacity:.45; cursor:not-allowed}
 :is(.btn,.brush,.addbrush,.pcard,.chip,.rslot,.rm,.zoom,.cb,.swap,.nm,.field input):focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
 /* 시작·완료 */
@@ -59,7 +60,28 @@ h2{font-size:16px; font-weight:600; margin:0}
 .err{color:var(--bad); font-size:14px; margin:8px 0 0}
 .intro .btn{margin-top:24px}
 
-/* ===== 1단계: 색으로 묶기 ===== */
+/* ===== 1단계: 유사도 평가 ===== */
+.simtop{position:sticky; top:0; z-index:6; background:var(--bg); padding-top:env(safe-area-inset-top,0px)}
+.simtop .bar{height:4px; background:var(--line)}
+.simtop .fill{height:4px; width:0; background:var(--primary); transition:width .3s}
+.simtop .cnt{max-width:980px; margin:0 auto; padding:8px 20px; text-align:right; font-size:14px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums}
+.simpage{max-width:760px; padding-top:16px}
+.simcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:28px 24px; transition:opacity .25s}
+.simq{font-size:20px; font-weight:700; text-align:center; line-height:1.4; margin:0 0 24px}
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.pw{background:var(--word); border-radius:14px; padding:36px 12px; text-align:center; font-size:28px; font-weight:600}
+.simscore{text-align:center; font-size:36px; font-weight:700; margin:28px 0 10px; color:var(--line-strong); font-variant-numeric:tabular-nums}
+.simscore.on{color:var(--primary)}
+#simRange{display:block; width:100%; height:28px; margin:0; accent-color:var(--primary); cursor:pointer}
+#simRange:focus-visible{outline:2px solid var(--focus); outline-offset:4px}
+.anchors{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:6px; font-size:14px; line-height:1.35; color:var(--muted)}
+.anchors span:nth-child(2){text-align:center} .anchors span:nth-child(3){text-align:right}
+.anchors small{font-size:12px}
+.simnav{display:flex; justify-content:center; gap:12px; margin-top:24px}
+.simnav .btn{min-width:120px}
+.simnote{text-align:center; color:var(--muted); font-size:14px; margin:12px 0 0; min-height:1.55em}
+
+/* ===== 2단계: 색으로 묶기 ===== */
 .page{max-width:980px; margin:0 auto; padding:40px 20px 96px}
 .brushbar{position:sticky; top:0; z-index:6; background:var(--bg); padding:12px 0 14px; padding-top:calc(12px + env(safe-area-inset-top,0px)); display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 .brushbar .lbl{font-size:14px; color:var(--muted); margin-right:2px}
@@ -83,7 +105,7 @@ h2{font-size:16px; font-weight:600; margin:0}
 .pagefoot{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-top:28px; padding-top:20px; border-top:1px solid var(--line)}
 .pagefoot p{margin:0; color:var(--muted); font-size:14.5px; max-width:52ch}
 
-/* ===== 2단계: 표정 매칭 ===== */
+/* ===== 3단계: 표정 매칭 ===== */
 .p2head{max-width:1360px; margin:0 auto; padding:32px 24px 0}
 .layout{display:grid; grid-template-columns:288px minmax(0,1fr); gap:28px; max-width:1360px; margin:0 auto; padding:16px 24px 48px}
 .side{position:sticky; top:calc(16px + env(safe-area-inset-top,0px)); align-self:start; display:flex; flex-direction:column; gap:14px; max-height:calc(100vh - 32px); overflow:auto}
@@ -181,6 +203,10 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   .pcards{grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
   .pcard{font-size:17px; min-height:66px; padding:8px}
   .brush,.addbrush{height:36px; font-size:14px}
+  .simcard{padding:22px 16px}
+  .simq{font-size:18px}
+  .pw{font-size:23px; padding:26px 8px}
+  .simtop .cnt{padding:8px 12px}
 }
 @media (max-width:360px){ .grid{grid-template-columns:minmax(0,1fr)} }
 @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
@@ -191,8 +217,9 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
 <!-- 시작 -->
 <section class="intro" id="intro">
   <h1>감정 단어 설문</h1>
-  <p class="lede">이 설문은 두 단계로 진행됩니다. 정답은 없으니 느끼는 대로 답해 주세요.</p>
+  <p class="lede">이 설문은 세 단계로 진행됩니다. 정답은 없으니 느끼는 대로 답해 주세요.</p>
   <ol class="parts">
+    <li><strong>감정 유사도 평가.</strong> 감정 단어 두 개를 한 쌍씩 보고, 두 감정의 뜻이 얼마나 비슷한지 1점부터 10점까지 매깁니다. 모두 78쌍입니다.</li>
     <li><strong>감정 단어 묶기.</strong> 감정 단어 13개 가운데 뜻이 비슷하다고 느끼는 것끼리 같은 색으로 칠해 묶습니다.</li>
     <li><strong>표정과 단어 짝짓기.</strong> 얼굴 사진 13장마다 가장 잘 맞는 감정 단어를 1순위로, 그다음으로 잘 맞는 단어를 2순위로 고릅니다. 두 단어 각각에 확신도를 1점부터 5점까지 매깁니다.</li>
   </ol>
@@ -204,9 +231,38 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   <button class="btn" id="startBtn" type="button">시작하기</button>
 </section>
 
-<!-- 1단계 -->
+<!-- 1단계: 유사도 평가 -->
+<div id="p0" hidden>
+  <div class="simtop">
+    <div class="bar"><div class="fill" id="simFill"></div></div>
+    <div class="cnt" id="simCount"></div>
+  </div>
+  <main class="page simpage">
+    <p class="stage">3단계 중 1단계</p>
+    <h1>감정 유사도 평가</h1>
+    <p class="lede">두 감정 단어의 뜻이 얼마나 비슷한지 막대를 움직여 1점부터 10점까지 매겨 주세요. 막대를 움직여야 다음 쌍으로 넘어갈 수 있고, ‘이전’을 누르면 앞의 쌍으로 돌아가 고칠 수 있습니다.</p>
+    <div class="simcard" id="simCard">
+      <p class="simq">다음 두 감정은 의미적으로 얼마나 유사하다고 생각하시나요?</p>
+      <div class="pair"><div class="pw" id="simW1"></div><div class="pw" id="simW2"></div></div>
+      <div class="simscore" id="simScore" aria-live="polite"></div>
+      <input type="range" id="simRange" step="1">
+      <div class="anchors" aria-hidden="true">
+        <span>전혀 유사하지 않음<br><small id="simMinLbl"></small></span>
+        <span>보통</span>
+        <span>매우 유사함<br><small id="simMaxLbl"></small></span>
+      </div>
+    </div>
+    <div class="simnav">
+      <button class="btn ghost" id="simPrev" type="button">이전</button>
+      <button class="btn" id="simNext" type="button">다음</button>
+    </div>
+    <p class="simnote" id="simNote" aria-live="polite"></p>
+  </main>
+</div>
+
+<!-- 2단계 -->
 <main class="page" id="p1" hidden>
-  <p class="stage">2단계 중 1단계</p>
+  <p class="stage">3단계 중 2단계</p>
   <h1>감정 단어 묶기</h1>
   <p class="lede">뜻이 비슷하다고 느끼는 감정끼리 같은 색으로 칠해 주세요. 위에서 색을 고른 뒤 카드를 누르면 그 색이 칠해지고, 같은 색으로 한 번 더 누르면 지워집니다. 다른 색을 고른 상태에서 누르면 그 색으로 바뀝니다. 묶음 개수와 크기는 자유이고, 혼자인 단어도 괜찮습니다.</p>
   <div class="brushbar">
@@ -222,10 +278,10 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   </div>
 </main>
 
-<!-- 2단계 -->
+<!-- 3단계 -->
 <div id="p2" hidden>
   <header class="p2head">
-    <p class="stage">2단계 중 2단계</p>
+    <p class="stage">3단계 중 3단계</p>
     <h1>표정과 단어 짝짓기</h1>
     <p class="lede">모든 얼굴에 1순위와 2순위 감정 단어를 고르고 각각의 확신도를 매겨 주세요. 단어를 칸으로 끌어다 놓거나, 단어를 누른 다음 칸을 누르면 됩니다. 제출할 때는 1순위 단어가 얼굴마다 하나씩 겹치지 않게 짝지어져 있어야 합니다.</p>
   </header>
@@ -283,7 +339,13 @@ const CONFIG = {
   confQuestion: '얼마나 확신하나요?',
   confLabels: ['전혀 확신 없음', '매우 확신함'],
   uniqueFirst: true,         // 제출 시 1순위 단어는 얼굴마다 겹치지 않게 (13개 1:1)
-  uniqueSecond: false        // true면 2순위도 겹치지 않게
+  uniqueSecond: false,       // true면 2순위도 겹치지 않게
+  // 1단계 유사도 평가 (78쌍)
+  shufflePairs: true,        // 쌍 제시 순서 무작위 (쌍 안의 좌우 위치도 무작위)
+  simMin: 1, simMax: 10, simDefault: 1,
+  // 유사도 점수를 Google Sheet로도 보냄 (Code.gs 웹 앱 URL). 빈 문자열이면 보내지 않음
+  sheetUrl: 'https://script.google.com/macros/s/AKfycby8MnZ7NNk7ND2VsRTYR7W2MjoIX6S2tvczAmZfSTGuZcrYCqTYsS4jdYCyVCpi-m2_/exec',
+  sheetName: '응답 결과(내국인)'
 };
 /* ================ */
 
@@ -315,12 +377,13 @@ $$('dialog').forEach(d => d.addEventListener('click', e => { if(e.target===d || 
 
 const S = {
   pid:'', sessionId: Math.random().toString(36).slice(2,10), startedAt:null, t0:0, page:'intro', output:null,
+  p0:{ pairs:[], idx:0, resp:[], score:null, touched:false, qStart:0, busy:false, startedAt:null, finishedAt:null, sheet:'not_sent' },
   p1:{ order:[], groups:[], nextId:1, brush:null, assign:{}, events:[], startedAt:null, finishedAt:null },
   p2:{ faceOrder:[], wordOrder:[], faces:{}, events:[], armed:null, startedAt:null }
 };
 const tms = () => Math.round(performance.now()-S.t0);
 function go(page){
-  ['intro','p1','p2','done'].forEach(id => $('#'+id).hidden = (id!==page));
+  ['intro','p0','p1','p2','done'].forEach(id => $('#'+id).hidden = (id!==page));
   S.page = page; window.scrollTo(0,0);
 }
 
@@ -329,11 +392,90 @@ $('#startBtn').addEventListener('click', () => {
   const pid = $('#pid').value.trim();
   if(!pid){ $('#pidErr').hidden=false; $('#pid').focus(); return; }
   S.pid = pid; S.startedAt = new Date(); S.t0 = performance.now();
-  initP1(); go('p1');
+  initP0(); go('p0');
 });
 $('#pid').addEventListener('keydown', e => { if(e.key==='Enter') $('#startBtn').click(); });
 
-/* ===================== 1단계: 색으로 묶기 ===================== */
+/* ===================== 1단계: 유사도 평가 ===================== */
+const P0 = S.p0;
+// 시트 열 순서용 고정 쌍 목록 (CSV 번호 순): "열망 - 불쾌함", "열망 - 탐욕", … 78개
+const CANONICAL_PAIRS = [];
+WORDS.forEach((a,i) => WORDS.slice(i+1).forEach(b => CANONICAL_PAIRS.push(`${a} - ${b}`)));
+function initP0(){
+  let id = 1;
+  P0.pairs = [];
+  WORDS.forEach((a,i) => WORDS.slice(i+1).forEach(b => {
+    P0.pairs.push({ id:id++, pair_key:`${a} - ${b}`, words:(CONFIG.shufflePairs && Math.random()<0.5) ? [b,a] : [a,b] });
+  }));
+  if(CONFIG.shufflePairs) shuffle(P0.pairs);
+  const r = $('#simRange');
+  r.min = CONFIG.simMin; r.max = CONFIG.simMax;
+  r.setAttribute('aria-label', `유사도 점수 (${CONFIG.simMin}~${CONFIG.simMax})`);
+  $('#simMinLbl').textContent = `(${CONFIG.simMin}점)`; $('#simMaxLbl').textContent = `(${CONFIG.simMax}점)`;
+  P0.startedAt = new Date();
+  loadSim(0);
+}
+function loadSim(i){
+  const prev = P0.resp[i];
+  P0.idx = i; P0.score = prev ? prev.score : CONFIG.simDefault; P0.touched = !!prev; P0.qStart = performance.now();
+  const q = P0.pairs[i];
+  $('#simW1').textContent = q.words[0]; $('#simW2').textContent = q.words[1];
+  $('#simRange').value = P0.score;
+  renderSim();
+}
+function renderSim(){
+  const total = P0.pairs.length, last = P0.idx===total-1;
+  $('#simFill').style.width = `${P0.idx/total*100}%`;
+  $('#simCount').textContent = `${P0.idx+1} / ${total}`;
+  $('#simScore').textContent = P0.touched ? `${P0.score}점` : '– 점';
+  $('#simScore').classList.toggle('on', P0.touched);
+  $('#simPrev').disabled = P0.idx===0;
+  $('#simNext').disabled = !P0.touched;
+  $('#simNext').textContent = last ? '다음 단계로' : '다음';
+  $('#simNote').textContent = !P0.touched ? '막대를 움직여 점수를 골라 주세요.'
+    : last ? '마지막 쌍입니다. 다음 단계로 넘어가면 이 단계로 돌아올 수 없습니다.' : '';
+}
+function saveSim(){
+  const q = P0.pairs[P0.idx], prev = P0.resp[P0.idx];
+  const dur = Math.round(performance.now()-P0.qStart) + (prev ? prev.duration_ms : 0);   // 다시 보면 시간 누적
+  P0.resp[P0.idx] = { order:P0.idx+1, question_id:q.id, pair_key:q.pair_key, word1:q.words[0], word2:q.words[1], score:P0.score, duration_ms:dur };
+  P0.qStart = performance.now();
+}
+function fadeSim(fn){
+  const card = $('#simCard'); P0.busy = true; card.style.opacity = 0;
+  setTimeout(() => { fn(); card.style.opacity = 1; P0.busy = false; }, 250);
+}
+function touchSim(){ if(!P0.touched){ P0.touched = true; renderSim(); } }
+$('#simRange').addEventListener('input', e => { P0.score = +e.target.value; P0.touched = true; renderSim(); });
+$('#simRange').addEventListener('pointerup', touchSim);
+$('#simRange').addEventListener('keydown', e => { if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key)) touchSim(); });
+$('#simPrev').addEventListener('click', () => {
+  if(P0.busy || P0.idx===0) return;
+  if(P0.touched) saveSim();
+  fadeSim(() => loadSim(P0.idx-1));
+});
+$('#simNext').addEventListener('click', () => {
+  if(P0.busy || !P0.touched) return;
+  saveSim();
+  if(P0.idx < P0.pairs.length-1) return fadeSim(() => loadSim(P0.idx+1));
+  P0.finishedAt = new Date();
+  postSheet();
+  initP1(); go('p1');
+});
+function postSheet(){
+  if(!CONFIG.sheetUrl){ P0.sheet = 'disabled'; return; }
+  // 제시 순서와 무관하게 고정 쌍 순서로 점수를 정렬해 1행(1인)으로 전송
+  const byKey = Object.fromEntries(P0.resp.map(r => [r.pair_key, r.score]));
+  const payload = { sheetName:CONFIG.sheetName, code:S.pid, totalMs:P0.resp.reduce((t,r)=>t+r.duration_ms,0),
+                    headers:CANONICAL_PAIRS, scores:CANONICAL_PAIRS.map(k => byKey[k] ?? '') };
+  P0.sheet = 'sending';
+  // text/plain + no-cors: Apps Script 웹 앱 호환. 응답 내용은 읽을 수 없어 '보냄'까지만 확인됨
+  fetch(CONFIG.sheetUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) })
+    .then(() => { P0.sheet = 'sent'; })
+    .catch(err => { console.error(err); P0.sheet = 'failed'; });
+}
+
+/* ===================== 2단계: 색으로 묶기 ===================== */
 const P1 = S.p1;
 const gColor = g => PALETTE[(g.num-1) % PALETTE.length];
 const gOf = w => P1.groups.find(g => g.id===P1.assign[w]) || null;
@@ -399,7 +541,7 @@ $('#nextBtn').addEventListener('click', () => {
   initP2(); go('p2');
 });
 
-/* ===================== 2단계: 1·2순위 + 확신도 ===================== */
+/* ===================== 3단계: 1·2순위 + 확신도 ===================== */
 const P2 = S.p2;
 const cards = {};
 const faceNo = id => P2.faceOrder.indexOf(id) + 1;
@@ -600,11 +742,23 @@ $('#submitBtn').addEventListener('click', () => {
   const submittedAt = new Date();
   const common = { participant_id:S.pid, session_id:S.sessionId };
 
-  // 1단계: 묶음 결과 1줄
+  // 1단계: 유사도 평가 1줄
+  const simScores = Object.fromEntries(P0.resp.map(r => [r.pair_key, r.score]));
+  const simLine = {
+    ...common, part:'similarity',
+    n_pairs:P0.pairs.length, scale_min:CONFIG.simMin, scale_max:CONFIG.simMax,
+    scores:Object.fromEntries(CANONICAL_PAIRS.map(k => [k, simScores[k] ?? null])),
+    ratings:P0.resp, sheet_post:P0.sheet,
+    started_at:P0.startedAt.toISOString(), finished_at:P0.finishedAt.toISOString(),
+    duration_sec:+((P0.finishedAt-P0.startedAt)/1000).toFixed(1),
+    total_rating_ms:P0.resp.reduce((t,r)=>t+r.duration_ms,0)
+  };
+
+  // 2단계: 묶음 결과 1줄
   const used = P1.groups.filter(g => gWords(g).length);
   const groups = used.map((g,i) => ({ group_no:i+1, label_shown:`묶음 ${g.num}`, color:gColor(g), name:g.name, size:gWords(g).length, words:gWords(g) }));
   const assignment = {}; WORDS.forEach(w => { assignment[w] = used.findIndex(g => g.id===P1.assign[w]) + 1; });
-  const lines = [{
+  const lines = [simLine, {
     ...common, part:'word_clustering',
     n_words:N, n_groups:groups.length, groups, assignment,
     card_order:P1.order, history:P1.events,
@@ -612,7 +766,7 @@ $('#submitBtn').addEventListener('click', () => {
     duration_sec:+((P1.finishedAt-P1.startedAt)/1000).toFixed(1)
   }];
 
-  // 2단계: 얼굴 1장당 1줄
+  // 3단계: 얼굴 1장당 1줄
   P2.faceOrder.forEach((id,i) => {
     const it=byId[id], f=P2.faces[id];
     lines.push({
@@ -635,7 +789,7 @@ $('#submitBtn').addEventListener('click', () => {
   $('#doneText').textContent = `응답 파일(${S.output.name})을 내려받았습니다. 파일이 보이지 않으면 아래 버튼을 눌러 다시 저장해 주세요. 저장을 확인했으면 창을 닫으셔도 됩니다.`;
 });
 $('#resaveBtn').addEventListener('click', () => download(S.output.name, S.output.text));
-window.addEventListener('beforeunload', e => { if(S.page==='p1' || S.page==='p2'){ e.preventDefault(); e.returnValue=''; } });
+window.addEventListener('beforeunload', e => { if(S.page==='p0' || S.page==='p1' || S.page==='p2'){ e.preventDefault(); e.returnValue=''; } });
 </script>
 </body>
 </html>
