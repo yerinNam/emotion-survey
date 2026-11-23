@@ -401,6 +401,8 @@ $('#startBtn').addEventListener('click', () => {
   initP0(); go('p0');
 });
 $('#pid').addEventListener('keydown', e => { if(e.key==='Enter') $('#startBtn').click(); });
+// Preload face photos in the background so they are ready by Part 3
+window.addEventListener('load', () => ITEMS.forEach(it => { const im = new Image(); im.decoding = 'async'; im.src = it.src; }));
 
 /* ===================== 1단계: 유사도 평가 ===================== */
 const P0 = S.p0;
