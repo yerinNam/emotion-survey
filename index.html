@@ -222,7 +222,7 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   <h1>감정 단어 설문</h1>
   <p class="lede">이 설문은 세 단계로 진행됩니다. 정답은 없으니 느끼는 대로 답해 주세요.</p>
   <ol class="parts">
-    <li><strong>감정 유사도 평가.</strong> 감정 단어 두 개를 한 쌍씩 보고, 두 감정의 뜻이 얼마나 비슷한지 1점부터 10점까지 매깁니다. 모두 78쌍입니다.</li>
+    <li><strong>감정 유사도 평가.</strong> 감정 단어 두 개를 한 쌍씩 보고, 두 감정의 뜻이 얼마나 비슷한지 0점부터 10점까지 매깁니다. 모두 78쌍입니다.</li>
     <li><strong>감정 단어 묶기.</strong> 감정 단어 13개 가운데 뜻이 비슷하다고 느끼는 것끼리 같은 색으로 칠해 묶습니다.</li>
     <li><strong>표정과 단어 짝짓기.</strong> 얼굴 사진 13장마다 가장 잘 맞는 감정 단어를 1순위로, 그다음으로 잘 맞는 단어를 2순위로 고릅니다. 두 단어 각각에 확신도를 1점부터 5점까지 매깁니다.</li>
   </ol>
@@ -243,7 +243,7 @@ dialog::backdrop{background:rgba(10,11,14,.55)}
   <main class="page simpage">
     <p class="stage">3단계 중 1단계</p>
     <h1>감정 유사도 평가</h1>
-    <p class="lede">두 감정 단어의 뜻이 얼마나 비슷한지 막대를 움직여 1점부터 10점까지 매겨 주세요. 막대를 움직여야 다음 쌍으로 넘어갈 수 있고, ‘이전’을 누르면 앞의 쌍으로 돌아가 고칠 수 있습니다.</p>
+    <p class="lede">두 감정 단어의 뜻이 얼마나 비슷한지 막대를 움직여 0점부터 10점까지 매겨 주세요. 막대를 움직여야 다음 쌍으로 넘어갈 수 있고, ‘이전’을 누르면 앞의 쌍으로 돌아가 고칠 수 있습니다.</p>
     <div class="simcard" id="simCard">
       <p class="simq">다음 두 감정은 의미적으로 얼마나 유사하다고 생각하시나요?</p>
       <div class="pair"><div class="pw" id="simW1"></div><div class="pw" id="simW2"></div></div>
@@ -345,7 +345,7 @@ const CONFIG = {
   uniqueSecond: false,       // true면 2순위도 겹치지 않게
   // 1단계 유사도 평가 (78쌍)
   shufflePairs: true,        // 쌍 제시 순서 무작위 (쌍 안의 좌우 위치도 무작위)
-  simMin: 1, simMax: 10, simDefault: 1,
+  simMin: 0, simMax: 10, simDefault: 0,
   // 유사도 점수를 Google Sheet로도 보냄 (Code.gs 웹 앱 URL). 빈 문자열이면 보내지 않음
   sheetUrl: 'https://script.google.com/macros/s/AKfycby8MnZ7NNk7ND2VsRTYR7W2MjoIX6S2tvczAmZfSTGuZcrYCqTYsS4jdYCyVCpi-m2_/exec',
   sheetName: '응답 결과(내국인)',
