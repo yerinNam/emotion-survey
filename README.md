@@ -77,6 +77,18 @@ Python에서는 `pandas.read_json('all.jsonl', lines=True)`로 읽은 뒤 `part`
 | `simMin`, `simMax`, `simDefault` | `1`, `10`, `1` | 유사도 척도 범위와 막대 시작점 |
 | `sheetUrl`, `sheetName` |  | 유사도 점수를 보낼 Apps Script 웹 앱 URL과 시트 이름. `sheetUrl`을 빈 문자열로 두면 보내지 않음 |
 
+## 노션으로 응답 보내기
+
+제출할 때 JSONL 전체를 노션 페이지 "인지와 정서 - 데이터 수집 (ko)" 아래에 참가자별 하위 페이지로 보낼 수 있습니다. 영어판은 (en) 페이지로 보냅니다. 노션 토큰은 공개 페이지에 넣을 수 없으므로 Google Apps Script를 중간에 둡니다.
+
+1. script.google.com에서 새 프로젝트를 만들고 `apps_script/notion_relay.gs` 내용을 붙여넣습니다.
+2. 프로젝트 설정 → 스크립트 속성에 `NOTION_TOKEN` = 노션 integration secret을 추가합니다. 토큰은 코드나 HTML에 넣지 않습니다.
+3. 노션의 두 페이지에서 ⋯ → Connections로 integration을 추가합니다.
+4. 배포 → 새 배포 → 웹 앱. 실행 계정은 '나', 액세스 권한은 '모든 사용자'로 합니다.
+5. 받은 `/exec` URL을 `src/survey_template.html`의 `CONFIG.notionUrl`에 넣고 `python build.py`를 실행합니다.
+
+전송은 `no-cors` 방식이라 페이지에서 성공 여부를 확인할 수 없습니다. 참가자 컴퓨터에 내려받아지는 파일이 백업입니다.
+
 ## 이미지나 단어 바꾸기 (다시 만들기)
 
 1. `stimuli/`에 있는 `번호_단어.png` 파일과 `00_감정단어_이미지_일람표.csv`를 바꿉니다. 파일 이름의 번호와 단어가 CSV의 `번호`, `감정단어`와 맞아야 합니다.

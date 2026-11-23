@@ -348,7 +348,10 @@ const CONFIG = {
   simMin: 1, simMax: 10, simDefault: 1,
   // 유사도 점수를 Google Sheet로도 보냄 (Code.gs 웹 앱 URL). 빈 문자열이면 보내지 않음
   sheetUrl: 'https://script.google.com/macros/s/AKfycby8MnZ7NNk7ND2VsRTYR7W2MjoIX6S2tvczAmZfSTGuZcrYCqTYsS4jdYCyVCpi-m2_/exec',
-  sheetName: '응답 결과(내국인)'
+  sheetName: '응답 결과(내국인)',
+  // 제출한 JSONL을 노션에도 보냄 (apps_script/notion_relay.gs 웹 앱 URL). 빈 문자열이면 보내지 않음
+  notionUrl: '',
+  lang: 'ko'          // which Notion page (ko/en) receives the file
 };
 /* ================ */
 
@@ -790,9 +793,16 @@ $('#submitBtn').addEventListener('click', () => {
 
   S.output = { name:`emotion_survey_${S.pid}_${stamp(submittedAt)}.jsonl`, text: lines.map(l=>JSON.stringify(l)).join('\n') + '\n' };
   download(S.output.name, S.output.text);
+  postNotion();
   go('done');
   $('#doneText').textContent = `응답 파일(${S.output.name})을 내려받았습니다. 파일이 보이지 않으면 아래 버튼을 눌러 다시 저장해 주세요. 저장을 확인했으면 창을 닫으셔도 됩니다.`;
 });
+function postNotion(){
+  if(!CONFIG.notionUrl) return;
+  // no-cors: Apps Script web app; the response is opaque. The downloaded file is the backup.
+  fetch(CONFIG.notionUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({ lang:CONFIG.lang, name:S.output.name, text:S.output.text }) }).catch(err => console.error(err));
+}
 $('#resaveBtn').addEventListener('click', () => download(S.output.name, S.output.text));
 window.addEventListener('beforeunload', e => { if(S.page==='p0' || S.page==='p1' || S.page==='p2'){ e.preventDefault(); e.returnValue=''; } });
 </script>
