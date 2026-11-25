@@ -46,16 +46,24 @@ function doPost(e) {
     const info = `${name} · participant_id: ${first.participant_id} · session_id: ${first.session_id} · lines: ${lines.length} · received: ${new Date().toISOString()}`;
     const infoBlock = { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: info } }] } };
 
-    let mode = 'file';
-    try {
-      const fileId = uploadFile(name, text);
-      appendBlocks(parent, [infoBlock, { object: 'block', type: 'file', file: { type: 'file_upload', file_upload: { id: fileId }, name: name } }]);
-    } catch (uploadErr) {
-      console.warn('file upload failed, falling back to code block: ' + uploadErr);
-      mode = 'code';
+    // Try .jsonl first; if Notion rejects that extension, retry as .jsonl.txt; last resort: code block
+    const errors = [];
+    let mode = 'code';
+    for (const fname of [name, name + '.txt']) {
+      try {
+        const fileId = uploadFile(fname, text);
+        appendBlocks(parent, [infoBlock, { object: 'block', type: 'file', file: { type: 'file_upload', file_upload: { id: fileId }, name: fname } }]);
+        mode = fname === name ? 'file' : 'file_txt';
+        break;
+      } catch (uploadErr) {
+        errors.push(fname + ': ' + String(uploadErr && uploadErr.message || uploadErr));
+      }
+    }
+    if (mode === 'code') {
+      console.warn('file upload failed, falling back to code block: ' + errors.join(' | '));
       appendBlocks(parent, [infoBlock].concat(codeBlocks(text)));
     }
-    return json({ ok: true, mode: mode });
+    return json({ ok: true, mode: mode, upload_errors: errors });
   } catch (err) {
     console.error(err);
     return json({ ok: false, error: String(err && err.message || err) });
